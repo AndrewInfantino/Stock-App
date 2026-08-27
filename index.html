@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Target Price" />
+<meta name="theme-color" content="#FFFFFF" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="/icon-192.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<title>Target Price</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#FFFFFF; --panel:#FFFFFF; --panel-2:#F4F2EF; --line:#E9E6E1; --line-2:#E0DCD5;
+    --ink:#17181B; --muted:#6E7480; --faint:#A6A9B0;
+    --copper:#B87333; --copper-hot:#C9863F; --copper-soft:#DEC1A2; --copper-tint:rgba(184,115,51,.10);
+    --up:#178A5A; --down:#D23B3B; --hit:#178A5A; --far:#8AA0C4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{background:radial-gradient(900px 500px at 84% -8%, rgba(184,115,51,.05), transparent 62%),var(--bg);
+    color:var(--ink);font-family:"Space Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+  .wrap{max-width:640px;margin:0 auto;padding:0 14px 48px}
+
+  header{position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg) 74%,rgba(255,255,255,0));
+    padding:calc(env(safe-area-inset-top) + 16px) 2px 8px}
+  .titlerow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{font-size:23px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+  h1 .tick{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;color:#fff;
+    background:var(--copper);padding:2px 6px;border-radius:5px;transform:translateY(-2px)}
+  .refresh{background:#fff;border:1px solid var(--copper-soft);color:var(--copper);border-radius:10px;
+    padding:9px 13px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;
+    align-items:center;gap:7px;transition:.15s}
+  .refresh:active{transform:scale(.97);background:var(--copper-tint)}.refresh:disabled{opacity:.6}
+  .spin{width:12px;height:12px;border:2px solid var(--copper-soft);border-top-color:var(--copper);border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .sub{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--muted)}
+  .sub b{color:var(--ink);font-weight:600}
+  .stamp{color:var(--faint)}
+
+  .search{width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:11px;color:var(--ink);
+    padding:11px 14px;font-size:15px;font-family:inherit;margin:12px 0 8px}
+  .search:focus{outline:none;border-color:var(--copper-soft);background:#fff}
+  .search::placeholder{color:var(--faint)}
+
+  .sorts{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+  .chip{background:#fff;border:1px solid var(--line-2);color:var(--muted);border-radius:99px;
+    padding:7px 13px;font-size:12.5px;font-family:inherit;font-weight:500;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:5px}
+  .chip:active{transform:scale(.97)}
+  .chip.active{background:var(--copper-tint);border-color:var(--copper-soft);color:var(--copper)}
+
+  details.adder{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:0 0 14px;overflow:hidden;box-shadow:0 1px 2px rgba(20,20,20,.03)}
+  details.adder summary{list-style:none;cursor:pointer;padding:12px 14px;font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  details.adder summary::-webkit-details-marker{display:none}
+  details.adder[open] summary{color:var(--ink);border-bottom:1px solid var(--line)}
+  .adder-body{padding:12px 14px;display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field.tk{flex:1;min-width:100px}.field.pr{flex:1;min-width:110px}
+  .field label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  .field input{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;color:var(--ink);
+    padding:11px 12px;font-size:16px;font-family:"JetBrains Mono",monospace;width:100%}
+  .field input:focus{outline:none;border-color:var(--copper-soft);background:#fff}
+  .add-btn{background:var(--copper);color:#fff;border:none;border-radius:9px;padding:12px 18px;
+    font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;height:44px}
+  .add-btn:active{transform:scale(.97);background:var(--copper-hot)}
+
+  .list{display:flex;flex-direction:column;gap:9px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 15px 15px;
+    position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(20,20,20,.04),0 2px 10px rgba(20,20,20,.02)}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;opacity:0;transition:.25s;background:var(--far)}
+  .card.b20::before,.card.b15::before,.card.b10::before{opacity:.85;background:var(--copper)}
+  .card.hit::before{opacity:.85;background:var(--hit)}
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .ident{min-width:0}
+  .tkr-line{display:flex;align-items:center;gap:8px}
+  .tkr{font-size:18px;font-weight:700;letter-spacing:.01em}
+  .day{font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:99px;white-space:nowrap}
+  .day.up{color:var(--up);background:rgba(23,138,90,.10)}
+  .day.down{color:var(--down);background:rgba(210,59,59,.10)}
+  .day.flat{color:var(--faint);background:var(--panel-2)}
+  .name{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:28ch;margin-top:3px}
+  .pctbox{text-align:right;flex-shrink:0}
+  .pct{font-family:"JetBrains Mono",monospace;font-size:22px;font-weight:700;line-height:1}
+  .pct.far{color:var(--muted)}.pct.b20{color:#B98A5A}.pct.b15{color:var(--copper)}
+  .pct.b10{color:#A85B22}.pct.hit{color:var(--hit)}.pct.none{color:var(--faint);font-size:14px}
+  .pctlabel{font-size:10.5px;color:var(--faint);margin-top:3px;letter-spacing:.02em}
+
+  .track{position:relative;height:6px;background:var(--panel-2);border-radius:99px;margin:18px 0 4px}
+  .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--far),var(--copper));transition:width .5s cubic-bezier(.2,.7,.3,1)}
+  .card.hit .fill{background:linear-gradient(90deg,var(--copper),var(--hit))}
+  .tick-m{position:absolute;top:-6px;width:1px;height:18px;background:var(--line-2)}
+  .tick-m span{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--faint)}
+  .dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:var(--ink);border:3px solid #fff;transform:translate(-50%,-50%);transition:left .5s cubic-bezier(.2,.7,.3,1);box-shadow:0 0 0 1px var(--line-2)}
+  .card.b20 .dot,.card.b15 .dot,.card.b10 .dot{background:var(--copper)}
+  .card.hit .dot{background:var(--hit)}
+  .flag{position:absolute;right:0;top:50%;transform:translate(50%,-50%);width:2px;height:16px;background:var(--faint)}
+
+  .bot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+  .figs{display:flex;gap:18px}
+  .fig{display:flex;flex-direction:column;gap:2px}
+  .fig .k{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600}
+  .fig .v{font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:500}
+  .fig .v.none{color:var(--faint);font-size:12px}
+  .fig .v.tgt{cursor:pointer;border-bottom:1px dashed var(--copper-soft);color:var(--copper)}
+  .del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:12px;font-family:inherit;padding:6px}
+  .del:active{color:var(--down)}
+  .edit{width:96px;background:#fff;border:1px solid var(--copper-soft);border-radius:7px;color:var(--ink);
+    padding:6px 8px;font-family:"JetBrains Mono",monospace;font-size:15px}
+
+  .empty{border:1px dashed var(--line-2);border-radius:14px;padding:40px 20px;text-align:center;color:var(--muted)}
+  .foot{margin-top:20px;font-size:11px;color:var(--faint);line-height:1.6;text-align:center}
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 18px);transform:translateX(-50%) translateY(16px);
+    background:var(--ink);color:#fff;padding:11px 17px;border-radius:11px;font-size:13px;opacity:0;transition:.26s;
+    pointer-events:none;z-index:60;box-shadow:0 12px 40px rgba(0,0,0,.2)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.backup{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:14px;font-size:12.5px;color:var(--faint)}
+  .lowline{font-size:10px;color:var(--faint);margin-top:3px;font-family:"JetBrains Mono",monospace;letter-spacing:.01em}
+  .lowline.near{color:var(--up)}
+  .linkbtn{background:none;border:none;color:var(--copper);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 8px}
+  .linkbtn:active{opacity:.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="titlerow">
+      <h1>Target Price</h1>
+      <button class="refresh" id="refreshBtn"><span id="refreshInner">&#8635; Refresh</span></button>
+    </div>
+    <div class="sub"><span><b id="cnt">0</b> stocks</span><span class="stamp" id="stamp"></span></div>
+    <input class="search" id="search" placeholder="Search ticker or company..." autocomplete="off" />
+    <div class="sorts" id="sorts">
+      <button class="chip active" data-sort="closest">Closest to target</button>
+      <button class="chip" data-sort="gainers">&#9650; Gainers</button>
+      <button class="chip" data-sort="losers">&#9660; Losers</button>
+    </div>
+  </header>
+
+  <details class="adder">
+    <summary>&#43;&nbsp; Add a stock</summary>
+    <div class="adder-body">
+      <div class="field tk"><label>Ticker</label><input id="tk" class="mono" placeholder="AAPL" maxlength="12" autocomplete="off" /></div>
+      <div class="field pr"><label>Target price</label><input id="pr" class="mono" placeholder="0.00" inputmode="decimal" autocomplete="off" /></div>
+      <button class="add-btn" id="addBtn">Add</button>
+    </div>
+  </details>
+
+  <div class="list" id="list"></div>
+  <div class="foot">Live prices via public market data, ~15&nbsp;min delayed. Tap a target to change it. Your list is saved on this device &mdash; use Export to back it up or copy it to another phone.</div>
+  <div class="backup">
+    <button class="linkbtn" id="exportBtn">&#8681; Export list</button>
+    <span>&middot;</span>
+    <label class="linkbtn" for="importFile">&#8679; Import list</label>
+    <span>&middot;</span>
+    <button class="linkbtn" id="saveBaseBtn">&#9733; Save as my list</button>
+    <span>&middot;</span>
+    <button class="linkbtn" id="resetBtn">&#8634; Reset to my list</button>
+    <input id="importFile" type="file" accept="application/json,.json" style="display:none" />
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SEED = [{"t":"AAPL","n":"Apple Inc.","target":229.86},{"t":"MSFT","n":"Microsoft Corporation","target":380.5},{"t":"NVDA","n":"NVIDIA Corporation","target":163.31},{"t":"META","n":"Meta Platforms, Inc.","target":445.11},{"t":"TSLA","n":"Tesla, Inc.","target":246.98},{"t":"GOOG","n":"Alphabet Inc.","target":264.58},{"t":"ORCL","n":"Oracle Corporation","target":113.36},{"t":"CRM","n":"Salesforce, Inc.","target":148.37},{"t":"INTU","n":"Intuit Inc.","target":249.94},{"t":"WDAY","n":"Workday, Inc.","target":138.44},{"t":"NOW","n":"ServiceNow, Inc.","target":95.56},{"t":"CSGP","n":"CoStar Group, Inc.","target":23.17},{"t":"ASML","n":"ASML Holding N.V.","target":1313.68},{"t":"MU","n":"Micron Technology, Inc.","target":661.22},{"t":"QCOM","n":"QUALCOMM Incorporated","target":122.98},{"t":"MRVL","n":"Marvell Technology, Inc.","target":160.64},{"t":"AVGO","n":"Broadcom Inc.","target":317.22},{"t":"CEG","n":"Constellation Energy Corporation","target":204.68},{"t":"VRT","n":"Vertiv Holdings Co","target":204.74},{"t":"FCX","n":"Freeport-McMoRan Inc.","target":53.08},{"t":"MP","n":"MP Materials Corp.","target":41.35},{"t":"USAR","n":"USA Rare Earth, Inc.","target":14.44},{"t":"NKE","n":"NIKE, Inc.","target":31.42},{"t":"CROX","n":"Crocs, Inc.","target":104.35},{"t":"LULU","n":"lululemon athletica inc.","target":95.39},{"t":"SBUX","n":"Starbucks Corporation","target":78.88},{"t":"V","n":"Visa Inc.","target":269.5},{"t":"DIS","n":"The Walt Disney Company","target":77.43},{"t":"RCL","n":"Royal Caribbean Cruises Ltd.","target":230.92},{"t":"MELI","n":"MercadoLibre, Inc.","target":1366.16},{"t":"BNS","n":"The Bank of Nova Scotia","target":66.61},{"t":"SOFI","n":"SoFi Technologies, Inc.","target":13.6},{"t":"UPST","n":"Upstart Holdings, Inc.","target":22.81},{"t":"RDDT","n":"Reddit, Inc.","target":118.88},{"t":"CRWV","n":"CoreWeave, Inc.","target":67.58},{"t":"NBIS","n":"Nebius Group N.V.","target":140.3},{"t":"BE","n":"Bloom Energy Corporation","target":162.65},{"t":"PL","n":"Planet Labs PBC","target":17.75},{"t":"RKLB","n":"Rocket Lab Corporation","target":61.12},{"t":"LITE","n":"Lumentum Holdings Inc.","target":621.22},{"t":"CIFR","n":"Cipher Mining Inc.","target":12.32},{"t":"IREN","n":"IREN Limited","target":29.84},{"t":"STM","n":"STMicroelectronics N.V.","target":41.33},{"t":"ETN","n":"Eaton Corporation plc","target":334.61},{"t":"BTSG","n":"BrightSpring Health Services, Inc.","target":46.44},{"t":"SKYY","n":"First Trust Cloud Computing ETF","target":120.66},{"t":"VGT","n":"Vanguard Information Technology ETF","target":90.59},{"t":"QTUM","n":"Defiance Quantum ETF","target":114.42},{"t":"DRAM","n":"Roundhill Memory ETF","target":37.76},{"t":"VOO","n":"Vanguard S&P 500 ETF","target":532.83},{"t":"XOVR","n":"ERShares Private-Public Crossover ETF","target":15.08},{"t":"SPCX","n":"ERShares SpaceX-linked ETF","target":99.69},{"t":"601689.SS","n":"Ningbo Tuopu Group Co., Ltd.","target":37.11},{"t":"PLTR.NE","n":"Palantir Technologies Inc. (CDR)","target":10.03},{"t":"CSU.TO","n":"Constellation Software Inc.","target":2483.49},{"t":"CRM.TO","n":"Salesforce, Inc. (CDR)","target":11.32},{"t":"ADBE.TO","n":"Adobe Inc. (CDR)","target":7.81},{"t":"ORAC.TO","n":"Oracle Corporation (CDR)","target":5.59},{"t":"SHOP.TO","n":"Shopify Inc.","target":161.14},{"t":"TRI.TO","n":"Thomson Reuters Corporation","target":108.73},{"t":"NOWS.TO","n":"ServiceNow, Inc. (CDR)","target":12.19},{"t":"LLY.TO","n":"Eli Lilly and Company (CDR)","target":32.63},{"t":"NKE.TO","n":"NIKE, Inc. (CDR)","target":5.64},{"t":"LSPD.TO","n":"Lightspeed Commerce Inc.","target":11.04},{"t":"AMZN.TO","n":"Amazon.com, Inc. (CDR)","target":23.81},{"t":"POW.TO","n":"Power Corporation of Canada","target":70.95},{"t":"MSFT.TO","n":"Microsoft Corporation (CDR)","target":26.65},{"t":"MU.TO","n":"Micron Technology, Inc. (CDR)","target":29.06},{"t":"CLS.TO","n":"Celestica Inc.","target":334.08},{"t":"CM.TO","n":"Canadian Imperial Bank of Commerce","target":124.88},{"t":"VDY.TO","n":"Vanguard FTSE Cdn High Dividend Yield ETF","target":58.11},{"t":"COST.TO","n":"Costco Wholesale Corporation (CDR)","target":31.69},{"t":"HHIS.TO","n":"Harvest Diversified High Income ETF","target":8.45},{"t":"NOVO.TO","n":"Novo Nordisk CDR (CAD Hedged)","target":15.0},{"t":"TSLA.TO","n":"Tesla, Inc. (CDR)","target":21.45},{"t":"META.TO","n":"Meta Platforms, Inc. (CDR)","target":23.66},{"t":"CCO.TO","n":"Cameco Corporation","target":101.78},{"t":"VFV.TO","n":"Vanguard S&P 500 Index ETF","target":143.75},{"t":"TD.TO","n":"The Toronto-Dominion Bank","target":126.91},{"t":"ATZ.TO","n":"Aritzia Inc.","target":107.98},{"t":"WMT.TO","n":"Walmart Inc. (CDR)","target":35.08},{"t":"QQC.TO","n":"Invesco NASDAQ 100 Index ETF","target":36.85},{"t":"XEQT.TO","n":"iShares Core Equity ETF Portfolio","target":34.51},{"t":"MFC.TO","n":"Manulife Financial Corporation","target":45.99},{"t":"DOL.TO","n":"Dollarama Inc.","target":143.51},{"t":"CRWV.TO","n":"CoreWeave, Inc. (CDR)","target":12.77},{"t":"AVGO.TO","n":"Broadcom Inc. (CDR)","target":12.08},{"t":"LULU.TO","n":"lululemon athletica inc. (CDR)","target":4.13},{"t":"RDDT.TO","n":"Reddit, Inc. (CDR)","target":11.36},{"t":"MDA.TO","n":"MDA Space Ltd.","target":35.47},{"t":"SRU-UN.TO","n":"SmartCentres REIT","target":21.21},{"t":"QCOM.TO","n":"QUALCOMM Incorporated (CDR)","target":15.96},{"t":"HUT.TO","n":"Hut 8 Corp.","target":90.7},{"t":"HIVE.TO","n":"HIVE Digital Technologies Ltd.","target":2.752},{"t":"COIN.TO","n":"Coinbase Global, Inc. (CDR)","target":6.76},{"t":"NVDA.TO","n":"NVIDIA Corporation (CDR)","target":36.47},{"t":"FTS.TO","n":"Fortis Inc. (verify)","target":57.89}];
+const KEY = "approach_v1";
+const $ = id => document.getElementById(id);
+let watch = [];
+let query = "";
+let sortMode = "closest";
+let refreshing = false;
+
+function load(){
+  try{ const s = localStorage.getItem(KEY); if(s) watch = JSON.parse(s); }catch(e){ watch=[]; }
+  if(!Array.isArray(watch) || !watch.length){
+    watch = SEED.map(s => ({ticker:s.t, name:s.n, target:(s.target ?? null), price:null, change:null, low52:null, lowFetched:0, updated:null}));
+    save();
+  }
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(watch)); }catch(e){} }
+
+function bandOf(price, target){
+  if(price==null || target==null || !target) return {key:"none", rank:-1, pct:null};
+  const pct = (price - target)/target*100;
+  if(pct <= 0)  return {key:"hit", rank:4, pct};
+  if(pct <= 10) return {key:"b10", rank:3, pct};
+  if(pct <= 15) return {key:"b15", rank:2, pct};
+  if(pct <= 20) return {key:"b20", rank:1, pct};
+  return {key:"far", rank:0, pct};
+}
+
+function addStock(){
+  const t = $("tk").value.trim().toUpperCase();
+  const p = parseFloat($("pr").value);
+  if(!t){ toast("Enter a ticker."); return; }
+  if(watch.some(w=>w.ticker===t)){ toast(t+" is already listed."); return; }
+  watch.unshift({ticker:t, name:"", target:(p>0?p:null), price:null, change:null, low52:null, lowFetched:0, updated:null});
+  $("tk").value=""; $("pr").value="";
+  save(); render();
+  fetchPrices([t]);
+}
+function removeStock(t){ watch = watch.filter(w=>w.ticker!==t); save(); render(); }
+function setTargetVal(t,val){ const w=watch.find(x=>x.ticker===t); if(!w) return;
+  const v=parseFloat(val); w.target=(v>0?v:null); save(); render(); }
+
+function visible(){
+  let arr = watch.filter(w=>{
+    if(!query) return true;
+    const q=query.toLowerCase();
+    return w.ticker.toLowerCase().includes(q) || (w.name||"").toLowerCase().includes(q);
+  });
+  if(sortMode==="gainers"){
+    arr.sort((a,b)=> (b.change==null?-1e9:b.change) - (a.change==null?-1e9:a.change));
+  } else if(sortMode==="losers"){
+    arr.sort((a,b)=> (a.change==null?1e9:a.change) - (b.change==null?1e9:b.change));
+  } else {
+    arr.sort((a,b)=>{
+      const ra=bandOf(a.price,a.target), rb=bandOf(b.price,b.target);
+      if(rb.rank!==ra.rank) return rb.rank-ra.rank;
+      if(ra.rank>=0) return (ra.pct==null?1e9:ra.pct)-(rb.pct==null?1e9:rb.pct);
+      return a.ticker.localeCompare(b.ticker);
+    });
+  }
+  return arr;
+}
+
+function dayBadge(w){
+  if(w.change==null) return `<span class="day flat">--</span>`;
+  const cls = w.change>0?"up":(w.change<0?"down":"flat");
+  const sign = w.change>0?"+":"";
+  return `<span class="day ${cls}">${sign}${fmt(w.change,2)}%</span>`;
+}
+
+function render(){
+  $("cnt").textContent = watch.length;
+  const rows = visible();
+  const list = $("list");
+  if(!rows.length){ list.innerHTML = `<div class="empty">No matches.</div>`; return; }
+  list.innerHTML = rows.map(w=>{
+    const bd = bandOf(w.price,w.target);
+    const cls = (bd.key==="none"||bd.key==="far")?"":bd.key;
+    let pctHtml, pctLabel;
+    if(w.target==null){ pctHtml=`<div class="pct none">no target</div>`; pctLabel="tap to set below"; }
+    else if(w.price==null){ pctHtml=`<div class="pct none">--</div>`; pctLabel="awaiting price"; }
+    else if(bd.pct<=0){ pctHtml=`<div class="pct hit">${fmt(Math.abs(bd.pct),1)}%</div>`; pctLabel="below target"; }
+    else { pctHtml=`<div class="pct ${bd.key}">+${fmt(bd.pct,1)}%</div>`; pctLabel="above target"; }
+
+    let track="";
+    if(w.target!=null){
+      const cp = w.price==null?0:Math.max(0,Math.min(100,(30-Math.max(bd.pct,0))/30*100));
+      const m=[[20,(30-20)/30*100],[15,(30-15)/30*100],[10,(30-10)/30*100]];
+      track=`<div class="track"><div class="fill" style="width:${cp}%"></div>
+        ${m.map(x=>`<div class="tick-m" style="left:${x[1]}%"><span>${x[0]}%</span></div>`).join("")}
+        <div class="flag"></div>${w.price!=null?`<div class="dot" style="left:${cp}%"></div>`:""}</div>`;
+    }
+    const priceV = w.price==null?`<span class="v none">--</span>`:`<span class="v">${fmt(w.price)}</span>`;
+    const tgtV = w.target==null?`<span class="v tgt" data-t="${w.ticker}">set</span>`:`<span class="v tgt" data-t="${w.ticker}">${fmt(w.target)}</span>`;
+    let lowHtml="";
+    if(w.low52!=null && w.price!=null){ const ol=(w.price-w.low52)/w.low52*100; lowHtml=`<div class="lowline ${ol<=10?"near":""}">${ol<=0?"at 1Y low":("+"+fmt(ol,1)+"% vs 1Y low")}</div>`; }
+
+    return `<div class="card ${cls}">
+      <div class="top">
+        <div class="ident">
+          <div class="tkr-line"><span class="tkr">${w.ticker}</span>${dayBadge(w)}</div>
+          <div class="name">${w.name||""}</div>
+        </div>
+        <div class="pctbox">${pctHtml}<div class="pctlabel">${pctLabel}</div>${lowHtml}</div>
+      </div>
+      ${track}
+      <div class="bot">
+        <div class="figs">
+          <div class="fig"><span class="k">Price</span>${priceV}</div>
+          <div class="fig"><span class="k">Target</span>${tgtV}</div>
+        </div>
+        <button class="del" data-d="${w.ticker}">Remove</button>
+      </div>
+    </div>`;
+  }).join("");
+  list.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>removeStock(b.dataset.d));
+  list.querySelectorAll("[data-t]").forEach(el=>el.onclick=()=>editTarget(el));
+}
+
+function editTarget(el){
+  const t=el.dataset.t; const w=watch.find(x=>x.ticker===t);
+  const inp=document.createElement("input"); inp.className="edit mono"; inp.inputMode="decimal";
+  inp.value=w.target!=null?w.target:""; inp.placeholder="target";
+  el.replaceWith(inp); inp.focus();
+  const commit=()=>setTargetVal(t,inp.value);
+  inp.onblur=commit; inp.onkeydown=e=>{ if(e.key==="Enter")inp.blur(); if(e.key==="Escape")render(); };
+}
+
+async function fetchPrices(symbols){
+  try{
+    const qs = encodeURIComponent(symbols.join(","));
+    const r = await fetch("/api/prices?symbols="+qs, {cache:"no-store"});
+    const j = await r.json();
+    const d = j.data || {};
+    let got=0;
+    watch.forEach(w=>{ const q=d[w.ticker];
+      if(q && typeof q.p==="number" && q.p>0){ w.price=q.p; w.change=(typeof q.c==="number"?q.c:null); w.updated=Date.now(); got++; } });
+    save(); render();
+    return got;
+  }catch(e){ return 0; }
+}
+
+async function fetchRanges(symbols){
+  try{
+    const r = await fetch("/api/range?symbols="+encodeURIComponent(symbols.join(",")), {cache:"no-store"});
+    const j = await r.json(); const d = j.data || {};
+    let got=0;
+    watch.forEach(w=>{ const q=d[w.ticker]; if(q && typeof q.low==="number" && q.low>0){ w.low52=q.low; if(typeof q.high==="number") w.high52=q.high; w.lowFetched=Date.now(); got++; } });
+    if(got){ save(); render(); }
+    return got;
+  }catch(e){ return 0; }
+}
+
+async function refreshRanges(){
+  const DAY=24*3600*1000;
+  const need = watch.filter(w=> w.low52==null || !w.lowFetched || (Date.now()-w.lowFetched)>DAY).map(w=>w.ticker);
+  if(!need.length) return;
+  for(let i=0;i<need.length;i+=40){ await fetchRanges(need.slice(i,i+40)); }
+}
+
+let priceRetries=0;
+async function refreshAll(){
+  if(refreshing) return;
+  refreshing=true; $("refreshBtn").disabled=true;
+  const syms = watch.map(w=>w.ticker);
+  const chunks=[]; for(let i=0;i<syms.length;i+=40) chunks.push(syms.slice(i,i+40));
+  let total=0, done=0;
+  for(const c of chunks){
+    $("refreshInner").innerHTML=`<span class="spin"></span> ${Math.round(done/chunks.length*100)}%`;
+    total += await fetchPrices(c); done++;
+  }
+  $("stamp").textContent = total?("updated "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})):"";
+  refreshing=false; $("refreshBtn").disabled=false; $("refreshInner").innerHTML="&#8635; Refresh";
+  if(total>0){ priceRetries=0; refreshRanges(); }
+  else if(priceRetries<3){ priceRetries++; setTimeout(refreshAll, 1200); }
+  else { toast("Couldn't load prices - tap Refresh to retry."); }
+}
+
+function fmt(n,d=2){ return Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+let tT; function toast(m){ const el=$("toast"); el.textContent=m; el.classList.add("show"); clearTimeout(tT); tT=setTimeout(()=>el.classList.remove("show"),2800); }
+
+$("refreshBtn").onclick=refreshAll;
+$("addBtn").onclick=addStock;
+$("pr").onkeydown=e=>{ if(e.key==="Enter") addStock(); };
+$("tk").onkeydown=e=>{ if(e.key==="Enter") $("pr").focus(); };
+$("search").oninput=e=>{ query=e.target.value; render(); };
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+  c.classList.add("active"); sortMode=c.dataset.sort; render();
+});
+
+function exportList(){
+  const list = watch.map(w=>({ticker:w.ticker,name:w.name,target:w.target}));
+  const blob = new Blob([JSON.stringify(list,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="target-price-list.json"; a.click(); toast("List exported.");
+}
+function doImport(file){
+  const reader=new FileReader();
+  reader.onload=()=>{ try{
+    const arr=JSON.parse(reader.result);
+    if(!Array.isArray(arr)){ toast("That file doesn't look like a saved list."); return; }
+    watch = arr.filter(x=>x&&x.ticker).map(x=>({ticker:String(x.ticker).toUpperCase().trim(), name:x.name||"", target:(typeof x.target==="number"?x.target:(parseFloat(x.target)||null)), price:null, change:null, low52:null, lowFetched:0, updated:null}));
+    save(); render(); refreshAll(); toast("Imported "+watch.length+" stocks.");
+  }catch(e){ toast("Could not read that file."); } };
+  reader.readAsText(file);
+}
+$("exportBtn").onclick=exportList;
+$("importFile").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) doImport(f); e.target.value=""; };
+
+const BASE_KEY="approach_baseline";
+function saveBaseline(){ try{ localStorage.setItem(BASE_KEY, JSON.stringify(watch.map(w=>({ticker:w.ticker,name:w.name,target:w.target})))); toast("Saved as your list ("+watch.length+" stocks)."); }catch(e){ toast("Couldn't save."); } }
+function resetToBaseline(){
+  let base=null; try{ const s=localStorage.getItem(BASE_KEY); if(s) base=JSON.parse(s); }catch(e){}
+  const usingDefault = !base || !base.length;
+  const src = usingDefault ? SEED.map(s=>({ticker:s.t,name:s.n,target:(s.target ?? null)})) : base;
+  const msg = usingDefault ? "No saved list yet - reset to the app's default list?" : "Reset to your saved list? This replaces the current view.";
+  if(!confirm(msg)) return;
+  watch = src.map(x=>({ticker:String(x.ticker).toUpperCase().trim(), name:x.name||"", target:(typeof x.target==="number"?x.target:null), price:null, change:null, low52:null, lowFetched:0, updated:null}));
+  save(); render(); refreshAll();
+  toast(usingDefault ? "Reset to default list." : "Reset to your list.");
+}
+$("saveBaseBtn").onclick=saveBaseline;
+$("resetBtn").onclick=resetToBaseline;
+
+load(); render(); refreshAll();
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="visible") refreshAll(); });
+window.addEventListener("pageshow", function(){ refreshAll(); });
+window.addEventListener("focus", function(){ refreshAll(); });
+</script>
+</body>
+</html>
